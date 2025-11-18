@@ -1,0 +1,37 @@
+{% for item in items %}
+<tr class="text-center">
+  <td class="fw-semibold">{{ item.codigo }}</td>
+  <td>
+    <a href="{% url 'item_detail' item.pk %}" class="text-decoration-none text-dark">
+      {{ item.descricao }}
+    </a>
+  </td>
+  <td>
+    {% if item.quantidade_atual <= item.estoque_minimo %}
+      <span class="badge bg-danger">{{ item.quantidade_atual }}</span>
+    {% else %}
+      <span class="badge bg-success">{{ item.quantidade_atual }}</span>
+    {% endif %}
+  </td>
+  <td>{{ item.estoque_minimo }}</td>
+  <td>
+    <div class="d-flex justify-content-center gap-2">
+      {% if perms.estoque.change_item %}
+        <a class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" href="{% url 'item_edit' item.pk %}">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+      {% endif %}
+      {% if perms.estoque.delete_item %}
+          <a href="javascript:void(0);" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" 
+          data-url="{% url 'item_delete' item.pk %}" 
+          data-nome="{{ item.descricao }}" 
+          onclick="confirmarExclusao(this.dataset.url, this.dataset.nome)">
+        <i class="bi bi-trash"></i> Excluir
+      </a>  
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted py-3">Nenhum item encontrado.</td></tr>
+{% endfor %}

@@ -1,0 +1,27 @@
+{% for fornecedor in fornecedores %}
+<tr class="text-center">
+  <td class="fw-semibold">{{ fornecedor.nome }}</td>
+  <td>{{ fornecedor.cnpj|default:"-" }}</td>
+  <td>{{ fornecedor.telefone|default:"-" }}</td>
+  <td>{{ fornecedor.email|default:"-" }}</td>
+  <td>
+    <div class="d-flex justify-content-center gap-2">
+      {% if perms.estoque.change_fornecedor %}
+        <a class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" href="{% url 'fornecedor_edit' fornecedor.pk %}">
+          <i class="bi bi-pencil-square"></i> Editar
+        </a>
+      {% endif %}
+      {% if perms.estoque.delete_fornecedor %}
+          <a href="javascript:void(0);" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" 
+          data-url="{% url 'fornecedor_delete' fornecedor.pk %}" 
+          data-nome="{{ fornecedor.nome }}" 
+          onclick="confirmarExclusao(this.dataset.url, this.dataset.nome)">
+        <i class="bi bi-trash"></i> Excluir
+      </a>   
+      {% endif %}
+    </div>
+  </td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted py-3">Nenhum fornecedor cadastrado.</td></tr>
+{% endfor %}
