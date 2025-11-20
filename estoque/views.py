@@ -9,6 +9,8 @@ from datetime import datetime, date
 from decimal import Decimal
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Case, When
 from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 def get_historical_stock_value(end_date):
     """
@@ -288,3 +290,182 @@ def buscar_fornecedor(request):
 
     # Renderiza APENAS o template parcial
     return render(request, 'estoque/partials/tabela_fornecedores.html', {'fornecedores': fornecedores})
+
+
+# ================================
+# API DE ALERTAS DE ESTOQUE
+# ================================
+
+@login_required
+@require_http_methods(["GET"])
+def api_alertas_estoque(request):
+    """
+    API REST que retorna todos os alertas de estoque.
+    
+    Endpoint: GET /api/alertas/
+    
+    Retorna JSON com:
+    - resumo: contadores por tipo de alerta
+    - alertas: lista de todos os itens com alertas
+    
+    Exemplo de resposta:
+    {
+        "resumo": {
+            "total_alertas": 5,
+            "criticos": 2,
+            "baixos": 2,
+            "altos": 1
+        },
+        "alertas": [
+            {
+                "status": "CRITICO",
+                "item_id": 1,
+                "item_codigo": "ITEM001",
+                "item_descricao": "Parafuso M6",
+                "quantidade_atual": 100,
+                "estoque_minimo": 300,
+                "estoque_maximo": 1000,
+                "percentual": 33.33,
+                "requer_acao": true,
+                "mensagem": "CRÍTICO: Estoque abaixo de 50% do mínimo (100/300)",
+                "nivel_urgencia": 3,
+                "quantidade_reposicao_sugerida": 900
+            }
+        ]
+    }
+    """
+    itens = Item.objects.all()
+    alertas = []
+    contadores = {
+        'criticos': 0,
+        'baixos': 0,
+        'altos': 0
+    }
+    
+    for item in itens:
+        manager = item.estoque_manager
+        status_info = manager.get_status_estoque()
+        
+        # Só adiciona aos alertas se requer ação
+        if status_info['requer_acao']:
+            status_info['nivel_urgencia'] = manager.get_nivel_urgencia()
+            status_info['quantidade_reposicao_sugerida'] = manager.calcular_quantidade_reposicao()
+            alertas.append(status_info)
+            
+            # Atualiza contadores
+            if status_info['status'] == 'CRITICO':
+                contadores['criticos'] += 1
+            elif status_info['status'] == 'BAIXO':
+                contadores['baixos'] += 1
+            elif status_info['status'] == 'ALTO':
+                contadores['altos'] += 1
+    
+    # Ordena por nível de urgência (mais urgente primeiro)
+    alertas.sort(key=lambda x: x['nivel_urgencia'], reverse=True)
+    
+    response_data = {
+        'resumo': {
+            'total_alertas': len(alertas),
+            'criticos': contadores['criticos'],
+            'baixos': contadores['baixos'],
+            'altos': contadores['altos']
+        },
+        'alertas': alertas
+    }
+    
+    return JsonResponse(response_data, safe=False)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_status_item(request, item_id):
+    """
+    API REST que retorna o status de estoque de um item específico.
+    
+    Endpoint: GET /api/item/<id>/status/
+    
+    Parâmetros:
+    - item_id: ID do item
+    
+    Retorna JSON com informações detalhadas do status do estoque do item.
+    
+    Exemplo de resposta:
+    {
+        "status": "BAIXO",
+        "item_id": 1,
+        "item_codigo": "ITEM001",
+        "item_descricao": "Parafuso M6",
+        "quantidade_atual": 250,
+        "estoque_minimo": 300,
+        "estoque_maximo": 1000,
+        "percentual": 83.33,
+        "requer_acao": true,
+        "mensagem": "BAIXO: Estoque abaixo do mínimo (250/300)",
+        "nivel_urgencia": 2,
+        "quantidade_reposicao_sugerida": 750
+    }
+    """
+    item = get_object_or_404(Item, pk=item_id)
+    manager = item.estoque_manager
+    status_info = manager.get_status_estoque()
+    status_info['nivel_urgencia'] = manager.get_nivel_urgencia()
+    status_info['quantidade_reposicao_sugerida'] = manager.calcular_quantidade_reposicao()
+    
+    return JsonResponse(status_info)
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_itens_criticos(request):
+    """
+    API REST que retorna apenas os itens com estoque crítico.
+    
+    Endpoint: GET /api/itens/criticos/
+    
+    Retorna JSON com lista de itens em estado crítico (abaixo de 50% do mínimo).
+    """
+    itens = Item.objects.all()
+    itens_criticos = []
+    
+    for item in itens:
+        manager = item.estoque_manager
+        if manager.verifica_estoque_critico():
+            status_info = manager.get_status_estoque()
+            status_info['nivel_urgencia'] = manager.get_nivel_urgencia()
+            status_info['quantidade_reposicao_sugerida'] = manager.calcular_quantidade_reposicao()
+            itens_criticos.append(status_info)
+    
+    return JsonResponse({
+        'total': len(itens_criticos),
+        'itens_criticos': itens_criticos
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def api_itens_reposicao(request):
+    """
+    API REST que retorna itens que necessitam reposição.
+    
+    Endpoint: GET /api/itens/reposicao/
+    
+    Retorna JSON com lista de itens que precisam de reposição (críticos ou baixos).
+    """
+    itens = Item.objects.all()
+    itens_reposicao = []
+    
+    for item in itens:
+        manager = item.estoque_manager
+        if manager.requer_reposicao():
+            status_info = manager.get_status_estoque()
+            status_info['nivel_urgencia'] = manager.get_nivel_urgencia()
+            status_info['quantidade_reposicao_sugerida'] = manager.calcular_quantidade_reposicao()
+            itens_reposicao.append(status_info)
+    
+    # Ordena por urgência
+    itens_reposicao.sort(key=lambda x: x['nivel_urgencia'], reverse=True)
+    
+    return JsonResponse({
+        'total': len(itens_reposicao),
+        'itens': itens_reposicao
+    })
