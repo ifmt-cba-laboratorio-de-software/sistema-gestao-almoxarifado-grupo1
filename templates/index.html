@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almoxarifado - Portal Principal</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        /* Paleta de Cores Institucional (Azul Forte) */
+        :root {
+            --ifmt-blue: #004d99; /* Azul escuro e institucional */
+            --ifmt-light: #f1f8ff; /* Fundo claro para contraste */
+        }
+        .bg-ifmt {
+            background-color: var(--ifmt-blue) !important;
+        }
+        .text-ifmt {
+            color: var(--ifmt-blue) !important;
+        }
+        .btn-ifmt {
+            background-color: var(--ifmt-blue);
+            border-color: var(--ifmt-blue);
+            color: white;
+        }
+        .btn-ifmt:hover {
+            background-color: #003366;
+            border-color: #003366;
+            color: white;
+        }
+
+        /* Seção Principal (Hero) */
+        .hero-section {
+            background-color: var(--ifmt-light);
+            padding: 80px 0;
+        }
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--ifmt-blue);
+            margin-bottom: 15px;
+        }
+        .card-acesso {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border-left: 5px solid var(--ifmt-blue); /* Destaque lateral */
+        }
+        .card-acesso:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-ifmt shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-building me-2"></i> ALMOXARIFADO
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'item_list' %}">Estoque</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'movimentacao_form' %}">Requisições</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'relatorio_cmv' %}">Relatórios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light btn-sm ms-lg-2" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Acessar</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3 text-ifmt">Sistema de Gestão de Almoxarifado</h1>
+            <p class="lead mb-4 text-muted">Controle eficiente e transparente de materiais.</p>
+            <a href="{% url 'item_form' %}" class="btn btn-ifmt btn-lg shadow-sm">
+                <i class="bi bi-cart-plus me-2"></i> Solicitar Material
+            </a>
+            <a href="{% url 'item_list' %}" class="btn btn-outline-secondary btn-lg shadow-sm ms-3">
+                <i class="bi bi-search me-2"></i> Consultar Estoque
+            </a>
+        </div>
+    </header>
+
+    <section class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold">Acesso Rápido às Funcionalidades</h2>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                
+                <div class="col">
+                    <a href="{% url 'item_list' %}" class="text-decoration-none">
+                        <div class="card h-100 shadow-sm card-acesso">
+                            <div class="card-body p-4">
+                                <i class="bi bi-box-seam feature-icon"></i>
+                                <h5 class="card-title fw-bold">Inventário Geral</h5>
+                                <p class="card-text text-muted">Acesse o catálogo completo de todos os itens e verifique a disponibilidade.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col">
+                    <a href="{% url 'movimentacao_form' %}" class="text-decoration-none">
+                        <div class="card h-100 shadow-sm card-acesso">
+                            <div class="card-body p-4">
+                                <i class="bi bi-clipboard-check feature-icon"></i>
+                                <h5 class="card-title fw-bold">Acompanhar Pedidos</h5>
+                                <p class="card-text text-muted">Verifique o status das suas solicitações e gerencie pedidos pendentes.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col">
+                    <a href="{% url 'relatorio_cmv' %}" class="text-decoration-none">
+                        <div class="card h-100 shadow-sm card-acesso">
+                            <div class="card-body p-4">
+                                <i class="bi bi-graph-up-arrow feature-icon"></i>
+                                <h5 class="card-title fw-bold">Gestão e Relatórios</h5>
+                                <p class="card-text text-muted">Área de gestores: entradas, saídas, inventário e manutenção de cadastros.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">Sistema de Almoxarifado IFMT - Laboratório de Software II</p>
+            <small class="text-muted">Desenvolvimento Foco em API - Versão 1.0</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
