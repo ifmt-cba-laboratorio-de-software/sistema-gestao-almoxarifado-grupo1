@@ -1,0 +1,48 @@
+{% extends 'almoxarifado/base.html' %} {% block title %}Registro - Sistema de
+Almoxarifado{% endblock %} {% block content %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <i
+              class="bi bi-person-plus"
+              style="font-size: 3rem; color: #0d6efd"
+            ></i>
+            <h3 class="mt-2">Criar Conta</h3>
+            <p class="text-muted">Preencha os dados abaixo</p>
+          </div>
+
+          <form method="post">
+            {% csrf_token %} {% for field in form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label"
+                >{{ field.label }}</label
+              >
+              {{ field }} {% if field.help_text %}
+              <small class="form-text text-muted"
+                >{{ field.help_text|safe }}</small
+              >
+              {% endif %} {% if field.errors %}
+              <div class="text-danger">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-person-check"></i> Registrar
+            </button>
+          </form>
+
+          <div class="text-center mt-3">
+            <p class="text-muted">
+              Já tem uma conta? <a href="{% url 'login' %}">Faça login</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

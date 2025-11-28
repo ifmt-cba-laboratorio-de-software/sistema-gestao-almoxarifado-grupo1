@@ -1,0 +1,394 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almoxarifado - Cadastro de Itens</title>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --ifmt-blue: #004d99;
+            --ifmt-blue-dark: #003366;
+            --ifmt-light: #f1f8ff;
+        }
+
+        .bg-ifmt { background-color: var(--ifmt-blue) !important; }
+        .text-ifmt { color: var(--ifmt-blue) !important; }
+
+        .btn-ifmt {
+            background-color: var(--ifmt-blue);
+            border-color: var(--ifmt-blue);
+            color: white;
+        }
+        .btn-ifmt:hover {
+            background-color: var(--ifmt-blue-dark);
+            border-color: var(--ifmt-blue-dark);
+        }
+
+        .hero-section {
+            background-color: var(--ifmt-light);
+            padding: 40px 0;
+        }
+
+        .form-header {
+            border-bottom: 2px solid var(--ifmt-blue);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .search-input {
+            padding-left: 45px;
+            border-radius: 25px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--ifmt-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0, 77, 153, 0.25);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ===========================================================
+     NAVBAR
+=========================================================== -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-ifmt shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="bi bi-building me-2"></i> ALMOXARIFADO
+        </a>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'itens_list' %}">Estoque</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'requisicoes_list' %}">Requisições</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'relatorios' %}">Relatórios</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link btn btn-outline-light btn-sm ms-lg-2" href="{% url 'login' %}">
+                        <i class="bi bi-box-arrow-in-right"></i> Acessar
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<header class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold text-ifmt mb-3">Cadastro de Itens</h1>
+        <p class="lead text-muted mb-4">Adicione novos itens ao estoque.</p>
+    </div>
+</header>
+
+<!-- ===========================================================
+     BARRA DE PESQUISA
+=========================================================== -->
+<section class="search-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="search-container">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="search-box">
+                                <i class="bi bi-search search-icon"></i>
+                                <input type="text" 
+                                       class="form-control search-input" 
+                                       placeholder="Pesquisar itens por código, descrição ou fornecedor..."
+                                       id="searchInput">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <select class="form-select" id="filterSelect">
+                                    <option value="all">Todos os campos</option>
+                                    <option value="codigo">Código</option>
+                                    <option value="descricao">Descrição</option>
+                                    <option value="fornecedor">Fornecedor</option>
+                                </select>
+                                <button class="btn btn-ifmt" id="searchButton">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Digite o termo que deseja pesquisar e selecione o filtro desejado
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===========================================================
+     FORMULÁRIO DE CADASTRO
+=========================================================== -->
+<section class="form-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+
+                        <!-- Cabeçalho -->
+                        <div class="form-header">
+                            <h3 class="text-ifmt fw-bold">
+                                <i class="bi bi-plus-circle me-2"></i>Dados do Item
+                            </h3>
+                            <p class="text-muted mb-0">Preencha os campos obrigatórios.</p>
+                        </div>
+
+                        <!-- Formulário -->
+                        <form method="post" action="#">
+                            {% csrf_token %}
+
+                            <!-- Código + Descrição -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold required-field">Código do Item</label>
+                                    <input type="text" class="form-control" name="codigo"
+                                           placeholder="Ex: MAT001" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold required-field">Descrição</label>
+                                    <input type="text" class="form-control" name="descricao"
+                                           placeholder="Ex: Papel A4 75g" required>
+                                </div>
+                            </div>
+
+                            <!-- Unidade + Valor -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold required-field">Unidade de Medida</label>
+                                    <select class="form-select" name="unidade_medida" required>
+                                        <option disabled selected>Selecione</option>
+                                        <option value="un">Unidade (UN)</option>
+                                        <option value="cx">Caixa (CX)</option>
+                                        <option value="pc">Pacote (PC)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold required-field">Valor Unitário (R$)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">R$</span>
+                                        <input type="number" class="form-control" step="0.01"
+                                               name="valor_unitario" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fornecedor -->
+                            <div class="row mb-4">
+
+                                <!-- Fornecedor Existente -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold required-field">Fornecedor</label>
+                                    <select class="form-select" id="fornecedor" name="fornecedor">
+                                        <option disabled selected>Selecione um fornecedor</option>
+
+                                        {% for fornecedor in fornecedores %}
+                                            <option value="{{ fornecedor.id }}">{{ fornecedor.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Novo Fornecedor -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Cadastrar Novo Fornecedor</label>
+                                    <input type="text" class="form-control"
+                                        id="novo_fornecedor" name="novo_fornecedor"
+                                        placeholder="Digite para cadastrar um novo fornecedor">
+                                </div>
+
+                            </div>
+
+                            <!-- Estoques -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Estoque Mínimo</label>
+                                    <input type="number" class="form-control" min="0" name="estoque_minimo">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Estoque Máximo</label>
+                                    <input type="number" class="form-control" min="0" name="estoque_maximo">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Quantidade Inicial</label>
+                                    <input type="number" class="form-control" min="0"
+                                           name="quantidade_inicial" value="0">
+                                </div>
+                            </div>
+
+                            <!-- Observações -->
+                            <label class="form-label fw-bold">Observações</label>
+                            <textarea class="form-control" name="observacoes" rows="3"></textarea>
+
+                            <!-- Botões -->
+                            <div class="d-flex justify-content-between mt-4">
+
+                                <a href="{% url 'itens_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                                </a>
+
+                                <div>
+                                    <button type="reset" class="btn btn-outline-danger me-2">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Limpar
+                                    </button>
+
+                                    <button type="submit" class="btn btn-ifmt">
+                                        <i class="bi bi-check-lg me-2"></i>Cadastrar Item
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<footer class="bg-dark text-white py-4 mt-5 text-center">
+    <p class="mb-0">Sistema de Almoxarifado IFMT - Laboratório de Software II</p>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ===========================================================
+     LÓGICA: fornecedor existente X novo fornecedor
+=========================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const fornecedorSelect = document.getElementById('fornecedor');
+    const novoFornecedorInput = document.getElementById('novo_fornecedor');
+
+    fornecedorSelect.addEventListener('change', () => {
+        if (fornecedorSelect.value) {
+            novoFornecedorInput.value = "";
+            novoFornecedorInput.disabled = true;
+        } else {
+            novoFornecedorInput.disabled = false;
+        }
+    });
+
+    novoFornecedorInput.addEventListener('input', () => {
+        if (novoFornecedorInput.value.trim() !== "") {
+            fornecedorSelect.value = "";
+            fornecedorSelect.disabled = true;
+        } else {
+            fornecedorSelect.disabled = false;
+        }
+    });
+
+});
+</script>
+
+<!-- ===========================================================
+     LÓGICA: barra de pesquisa
+=========================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const filterSelect = document.getElementById('filterSelect');
+    const searchButton = document.getElementById('searchButton');
+
+    // Função para executar a pesquisa
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+        const filterType = filterSelect.value;
+
+        if (searchTerm) {
+            // Aqui você pode implementar a lógica de pesquisa
+            // Por exemplo, redirecionar para uma URL com parâmetros de busca
+            // ou fazer uma requisição AJAX
+            console.log(`Pesquisando por: ${searchTerm} no campo: ${filterType}`);
+            
+            // Exemplo de alerta (substitua pela sua lógica real)
+            alert(`Pesquisando: "${searchTerm}" no campo: ${filterType}`);
+        } else {
+            alert('Por favor, digite um termo para pesquisar.');
+            searchInput.focus();
+        }
+    }
+
+    // Evento do botão de pesquisa
+    searchButton.addEventListener('click', performSearch);
+
+    // Evento do Enter no campo de pesquisa
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // Foco automático no campo de pesquisa
+    searchInput.focus();
+});
+</script>
+
+</body>
+</html>

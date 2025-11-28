@@ -1,0 +1,86 @@
+{% extends 'almoxarifado/base.html' %} {% block title %}Início - Sistema de
+Almoxarifado{% endblock %} {% block content %}
+<div class="container">
+  <h1 class="mb-4">Dashboard</h1>
+
+  <div class="row">
+    <div class="col-md-3 mb-4">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">Total de Itens</h5>
+          <h2>{{ total_itens }}</h2>
+          <a href="{% url 'item_list' %}" class="text-white"
+            >Ver todos <i class="bi bi-arrow-right"></i
+          ></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <h5 class="card-title">Abaixo do Mínimo</h5>
+          <h2>{{ itens_abaixo_minimo }}</h2>
+          <a href="{% url 'item_list' %}?status=minimo" class="text-white"
+            >Ver itens <i class="bi bi-arrow-right"></i
+          ></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">Movimentações Hoje</h5>
+          <h2>{{ movimentacoes_hoje }}</h2>
+          <a href="{% url 'movimentacao_list' %}" class="text-white"
+            >Ver todas <i class="bi bi-arrow-right"></i
+          ></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <h5 class="card-title">Retiradas Ativas</h5>
+          <h2>{{ retiradas_ativas }}</h2>
+          <a href="#" class="text-white"
+            >Ver retiradas <i class="bi bi-arrow-right"></i
+          ></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Ações Rápidas</h5>
+        </div>
+        <div class="card-body">
+          <a href="{% url 'item_create' %}" class="btn btn-primary mb-2 w-100">
+            <i class="bi bi-plus-circle"></i> Novo Item
+          </a>
+          <a
+            href="{% url 'movimentacao_entrada' %}"
+            class="btn btn-success mb-2 w-100"
+          >
+            <i class="bi bi-arrow-down-circle"></i> Registrar Entrada
+          </a>
+          <a
+            href="{% url 'movimentacao_saida' %}"
+            class="btn btn-danger mb-2 w-100"
+          >
+            <i class="bi bi-arrow-up-circle"></i> Registrar Saída
+          </a>
+          <a href="{% url 'relatorio' %}" class="btn btn-info w-100">
+            <i class="bi bi-file-earmark-text"></i> Gerar Relatório
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'almoxarifado/base.html' %} {% block content %}
+<div class="container my-5">
+  <h1>Movimentações</h1>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Tipo</th>
+        <th>Item</th>
+        <th>Quantidade</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for mov in movimentacoes %}
+      <tr>
+        <td>{{ mov.data_movimentacao|date:"d/m/Y H:i" }}</td>
+        <td>{{ mov.get_tipo_display }}</td>
+        <td>{{ mov.item.descricao }}</td>
+        <td>{{ mov.quantidade }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

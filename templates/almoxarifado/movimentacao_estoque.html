@@ -1,0 +1,78 @@
+<!-- DENTRO DO FORMULÁRIO DE ENTRADA -->
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="tipo" value="entrada" />
+
+  <div class="mb-3">
+    <label for="itemEntrada" class="form-label">Item</label>
+    <select class="form-select" name="item" required>
+      <option selected disabled value="">Selecione o item...</option>
+      {% for item in itens %}
+      <option value="{{ item.id }}">
+        {{ item.codigo }} - {{ item.descricao }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="quantidadeEntrada" class="form-label">Quantidade</label>
+    <input
+      type="number"
+      class="form-control"
+      name="quantidade"
+      min="1"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="origemEntrada" class="form-label"
+      >Origem (Fornecedor/Nota Fiscal)</label
+    >
+    <input type="text" class="form-control" name="referencia" required />
+  </div>
+  <div class="mb-3">
+    <label for="dataEntrada" class="form-label">Data da Entrada</label>
+    <input type="date" class="form-control" name="data" required />
+  </div>
+  <button type="submit" class="btn btn-success w-100">Confirmar Entrada</button>
+</form>
+
+<!-- DENTRO DO FORMULÁRIO DE SAÍDA -->
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="tipo" value="saida" />
+
+  <div class="mb-3">
+    <label for="itemSaida" class="form-label">Item</label>
+    <select class="form-select" name="item" required>
+      <option selected disabled value="">Selecione o item...</option>
+      {% for item in itens %}
+      <option value="{{ item.id }}">
+        {{ item.codigo }} - {{ item.descricao }} (Disp: {{ item.quantidade_atual
+        }})
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="quantidadeSaida" class="form-label">Quantidade</label>
+    <input
+      type="number"
+      class="form-control"
+      name="quantidade"
+      min="1"
+      required
+    />
+  </div>
+  <div class="mb-3">
+    <label for="destinoSaida" class="form-label"
+      >Destino (Setor/Requisição)</label
+    >
+    <input type="text" class="form-control" name="referencia" required />
+  </div>
+  <div class="mb-3">
+    <label for="dataSaida" class="form-label">Data da Saída</label>
+    <input type="date" class="form-control" name="data" required />
+  </div>
+  <button type="submit" class="btn btn-danger w-100">Confirmar Saída</button>
+</form>

@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estoque - Lista de Itens</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+
+    <style>
+      :root {
+        --ifmt-blue: #004d99;
+        --ifmt-light: #f1f8ff;
+      }
+      .bg-ifmt {
+        background-color: var(--ifmt-blue) !important;
+      }
+      .text-ifmt {
+        color: var(--ifmt-blue) !important;
+      }
+      .btn-ifmt {
+        background-color: var(--ifmt-blue);
+        border-color: var(--ifmt-blue);
+        color: white;
+      }
+      .btn-ifmt:hover {
+        background-color: #003366;
+        border-color: #003366;
+        color: white;
+      }
+      .table-alert-min {
+        background-color: #fff3cd;
+      }
+      .table-alert-max {
+        background-color: #f8d7da;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-ifmt shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+          <i class="bi bi-building me-2"></i> ALMOXARIFADO
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'home' %}">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="{% url 'itens_list' %}"
+                >Estoque</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'requisicoes_list' %}"
+                >Requisições</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'relatorios' %}">Relatórios</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container my-5">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold text-ifmt">Inventário de Estoque</h1>
+        <div>
+          <a
+            href="{% url 'movimentacao_estoque' %}"
+            class="btn btn-outline-secondary me-2"
+          >
+            <i class="bi bi-arrow-left-right"></i> Movimentação
+          </a>
+          <a
+            href="{% url 'inventario_periodico' %}"
+            class="btn btn-outline-secondary me-2"
+          >
+            <i class="bi bi-calendar-check"></i> Inventário Periódico
+          </a>
+          <a href="{% url 'item_create' %}" class="btn btn-ifmt">
+            <i class="bi bi-plus-circle"></i> Novo Item
+          </a>
+        </div>
+      </div>
+
+      {% if messages %} {% for message in messages %}
+      <div
+        class="alert alert-{{ message.tags }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %} {% endif %}
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Código</th>
+                  <th scope="col">Descrição</th>
+                  <th scope="col">Fornecedor</th>
+                  <th scope="col" class="text-center">Estoque Atual</th>
+                  <th scope="col" class="text-center">Mínimo</th>
+                  <th scope="col" class="text-center">Máximo</th>
+                  <th scope="col" class="text-center">Status</th>
+                  <th scope="col" class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in itens %}
+                <tr
+                  {%
+                  if
+                  item.esta_abaixo_minimo
+                  %}class="table-alert-min"
+                  {%
+                  elif
+                  item.esta_acima_maximo
+                  %}class="table-alert-max"
+                  {%
+                  endif
+                  %}
+                >
+                  <td>{{ item.codigo }}</td>
+                  <td>{{ item.descricao }}</td>
+                  <td>{{ item.fornecedor.nome }}</td>
+                  <td class="text-center">
+                    {{ item.quantidade_atual }} {{
+                    item.get_unidade_medida_display }}
+                  </td>
+                  <td class="text-center">{{ item.estoque_minimo }}</td>
+                  <td class="text-center">{{ item.estoque_maximo }}</td>
+                  <td class="text-center">
+                    {% if item.esta_abaixo_minimo %}
+                    <span class="badge bg-warning text-dark">
+                      <i class="bi bi-exclamation-triangle-fill"></i> Mínimo
+                    </span>
+                    {% elif item.esta_acima_maximo %}
+                    <span class="badge bg-danger">
+                      <i class="bi bi-arrow-up-circle-fill"></i> Máximo
+                    </span>
+                    {% else %}
+                    <span class="badge bg-success">Normal</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <a
+                      href="{% url 'item_detail' item.id %}"
+                      class="btn btn-sm btn-outline-info"
+                      title="Detalhes"
+                    >
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a
+                      href="{% url 'item_update' item.id %}"
+                      class="btn btn-sm btn-outline-warning"
+                      title="Editar"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted">
+                    Nenhum item cadastrado.
+                    <a href="{% url 'item_create' %}"
+                      >Cadastre o primeiro item</a
+                    >
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+      <div class="container text-center">
+        <p class="mb-0">
+          Sistema de Almoxarifado IFMT - Laboratório de Software II
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

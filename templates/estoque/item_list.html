@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-body">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary fw-bold mb-0">📦 Itens do Almoxarifado</h3>
+        {% if perms.estoque.add_item %}
+          <a class="btn btn-primary d-flex align-items-center gap-2" href="{% url 'item_create' %}">
+            <i class="bi bi-plus-circle"></i> Novo Item
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="row mb-3">
+        <div class="col">
+          <input type="text" class="form-control" name="q" placeholder="Buscar por código ou descrição..."
+                 hx-get="{% url 'buscar_item' %}"
+                 hx-trigger="keyup changed delay:500ms"
+                 hx-target="#results-table"
+                 hx-indicator=".htmx-indicator">
+          <span class="htmx-indicator">Buscando...</span>
+        </div>
+      </div>
+      <table class="table align-middle table-hover">
+        <thead class="table-light">
+          <tr class="text-center">
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Qtd. Atual</th>
+            <th>Estoque Mínimo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="results-table">
+          {% include 'estoque/partials/tabela_itens.html' %}
+        </tbody>
+      </table>
+
+      {% if items.has_other_pages and not request.GET.q %}
+      <nav aria-label="Paginação de Itens" class="mt-3">
+        </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmarExclusao(url, nomeItem) {
+    Swal.fire({
+        title: 'Tem certeza?',
+        text: `Você deseja excluir o item '${nomeItem}'? Esta ação não pode ser desfeita!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    })
+}
+</script>
+{% endblock %}
