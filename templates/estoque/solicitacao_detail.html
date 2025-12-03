@@ -1,0 +1,83 @@
+{% extends 'base.html' %} {% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-4">
+          <h3 class="text-primary fw-bold mb-3">
+            <i class="bi bi-list-check"></i> Detalhes da Solicitação #{{
+            solicitacao.id }}
+          </h3>
+
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Item</dt>
+            <dd class="col-sm-8">{{ solicitacao.item.descricao }}</dd>
+
+            <dt class="col-sm-4">Quantidade</dt>
+            <dd class="col-sm-8">{{ solicitacao.quantidade }}</dd>
+
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8">
+              {% if solicitacao.tipo == 'CONSUMO' %} Consumo {% else %} Retirada
+              Temporária {% endif %}
+            </dd>
+
+            <dt class="col-sm-4">Status</dt>
+            <dd class="col-sm-8">
+              {% if solicitacao.status == 'PENDENTE' %}
+              <span class="badge bg-warning text-dark">Pendente</span>
+              {% elif solicitacao.status == 'APROVADA' %}
+              <span class="badge bg-primary">Aprovada</span>
+              {% elif solicitacao.status == 'ATENDIDA' %}
+              <span class="badge bg-success">Atendida</span>
+              {% elif solicitacao.status == 'CANCELADA' %}
+              <span class="badge bg-danger">Cancelada</span>
+              {% else %}
+              <span class="badge bg-light text-dark"
+                >{{ solicitacao.status }}</span
+              >
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-4">Solicitante</dt>
+            <dd class="col-sm-8">
+              {{
+              solicitacao.solicitante.get_full_name|default:solicitacao.solicitante.username
+              }}
+            </dd>
+
+            <dt class="col-sm-4">Data da Solicitação</dt>
+            <dd class="col-sm-8">
+              {{ solicitacao.data_solicitacao|date:"d/m/Y H:i" }}
+            </dd>
+
+            {% if solicitacao.data_devolucao_prevista %}
+            <dt class="col-sm-4">Devolução Prevista</dt>
+            <dd class="col-sm-8">
+              {{ solicitacao.data_devolucao_prevista|date:"d/m/Y" }}
+            </dd>
+            {% endif %} {% if solicitacao.data_atendimento %}
+            <dt class="col-sm-4">Data de Atendimento</dt>
+            <dd class="col-sm-8">
+              {{ solicitacao.data_atendimento|date:"d/m/Y H:i" }}
+            </dd>
+            {% endif %} {% if solicitacao.observacao %}
+            <dt class="col-sm-4">Observações</dt>
+            <dd class="col-sm-8">{{ solicitacao.observacao }}</dd>
+            {% endif %}
+          </dl>
+
+          <div class="mt-4 d-flex justify-content-between">
+            <a
+              href="{% url 'solicitacao_list' %}"
+              class="btn btn-outline-secondary"
+            >
+              <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

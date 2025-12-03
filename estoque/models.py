@@ -1,102 +1,80 @@
-# estoque/models.py
+from decimal import Decimal
 
 from django.db import models
 from django.contrib.auth.models import User
-from decimal import Decimal
 
 
 class EstoqueManager:
     """
-    Classe responsável por gerenciar alertas e status de estoque de itens.
-    
-    Valores de referência:
-    - ESTOQUE_MAXIMO_PADRAO: 1000 unidades
-    - ESTOQUE_MINIMO_PADRAO: 300 unidades
-    - PERCENTUAL_CRITICO: 50% do estoque mínimo (150 unidades)
-    
-    Status possíveis:
-    - CRITICO: Quantidade < 50% do estoque mínimo
-    - BAIXO: Quantidade < estoque mínimo
-    - OK: Quantidade entre mínimo e máximo
-    - ALTO: Quantidade > estoque máximo
+    Classe responsável por gerenciar alertas e status de estoque de um Item.
+    Usada em views e APIs para identificar itens críticos, baixos, altos,
+    bem como sugerir quantidade de reposição.
     """
-    
+
     ESTOQUE_MAXIMO_PADRAO = 1000
     ESTOQUE_MINIMO_PADRAO = 300
-    PERCENTUAL_CRITICO = 0.5  # 50% do estoque mínimo
-    
+    PERCENTUAL_CRITICO = Decimal('0.50')
+
     STATUS_CRITICO = 'CRITICO'
     STATUS_BAIXO = 'BAIXO'
     STATUS_OK = 'OK'
     STATUS_ALTO = 'ALTO'
-    
-    def __init__(self, item):
-        """
-        Inicializa o gerenciador com uma instância de Item.
-        
-        Args:
-            item (Item): Instância do modelo Item
-        """
+
+    def __init__(self, item: "Item"):
         self.item = item
-        self.estoque_minimo = item.estoque_minimo if item.estoque_minimo > 0 else self.ESTOQUE_MINIMO_PADRAO
-        self.estoque_maximo = item.estoque_maximo if item.estoque_maximo > 0 else self.ESTOQUE_MAXIMO_PADRAO
-        self.quantidade_atual = item.quantidade_atual
-    
-    def verifica_estoque_critico(self):
+
+    # Atalhos para propriedades
+    @property
+    def quantidade_atual(self) -> int:
+        return self.item.quantidade_atual or 0
+
+    @property
+    def estoque_minimo(self) -> int:
+        if self.item.estoque_minimo and self.item.estoque_minimo > 0:
+            return self.item.estoque_minimo
+        return self.ESTOQUE_MINIMO_PADRAO
+
+    @property
+    def estoque_maximo(self) -> int:
+        if self.item.estoque_maximo and self.item.estoque_maximo > 0:
+            return self.item.estoque_maximo
+        return self.ESTOQUE_MAXIMO_PADRAO
+
+    # Regras de negócio de estoque
+
+    def verifica_estoque_critico(self) -> bool:
         """
-        Verifica se o estoque está em nível crítico (abaixo de 50% do mínimo).
-        
-        Returns:
-            bool: True se crítico, False caso contrário
+        Verdadeiro se a quantidade atual estiver abaixo de 50% do estoque mínimo.
         """
-        limite_critico = self.estoque_minimo * self.PERCENTUAL_CRITICO
+        limite_critico = int(self.estoque_minimo * self.PERCENTUAL_CRITICO)
         return self.quantidade_atual < limite_critico
-    
-    def verifica_estoque_baixo(self):
+
+    def verifica_estoque_baixo(self) -> bool:
         """
-        Verifica se o estoque está abaixo do nível mínimo.
-        
-        Returns:
-            bool: True se baixo, False caso contrário
+        Verdadeiro se a quantidade atual for menor que o estoque mínimo.
         """
         return self.quantidade_atual < self.estoque_minimo
-    
-    def verifica_estoque_alto(self):
+
+    def verifica_estoque_alto(self) -> bool:
         """
-        Verifica se o estoque está acima do nível máximo.
-        
-        Returns:
-            bool: True se alto, False caso contrário
+        Verdadeiro se a quantidade atual for maior que o estoque máximo.
         """
         return self.quantidade_atual > self.estoque_maximo
-    
-    def get_percentual_estoque(self):
+
+    def get_percentual_estoque(self) -> float:
         """
-        Calcula o percentual do estoque atual em relação ao mínimo.
-        
-        Returns:
-            float: Percentual (0-100+) do estoque em relação ao mínimo
+        Percentual da quantidade atual em relação ao estoque mínimo.
         """
         if self.estoque_minimo == 0:
             return 0.0
-        return (self.quantidade_atual / self.estoque_minimo) * 100
-    
-    def get_status_estoque(self):
+        return float((Decimal(self.quantidade_atual) / Decimal(self.estoque_minimo)) * 100)
+
+    def get_status_estoque(self) -> dict:
         """
-        Retorna o status atual do estoque com informações detalhadas.
-        
-        Returns:
-            dict: Dicionário contendo:
-                - status (str): STATUS_CRITICO, STATUS_BAIXO, STATUS_OK ou STATUS_ALTO
-                - quantidade_atual (int): Quantidade em estoque
-                - estoque_minimo (int): Limite mínimo
-                - estoque_maximo (int): Limite máximo
-                - percentual (float): Percentual em relação ao mínimo
-                - requer_acao (bool): Se requer ação imediata
-                - mensagem (str): Descrição do status
+        Retorna um dicionário com o status do item.
         """
         percentual = self.get_percentual_estoque()
-        
+
         if self.verifica_estoque_critico():
             status = self.STATUS_CRITICO
             requer_acao = True
@@ -113,7 +91,7 @@ class EstoqueManager:
             status = self.STATUS_OK
             requer_acao = False
             mensagem = f"OK: Estoque dentro dos limites ({self.quantidade_atual})"
-        
+
         return {
             'status': status,
             'quantidade_atual': self.quantidade_atual,
@@ -124,88 +102,97 @@ class EstoqueManager:
             'mensagem': mensagem,
             'item_id': self.item.id,
             'item_codigo': self.item.codigo,
-            'item_descricao': self.item.descricao
+            'item_descricao': self.item.descricao,
+            'categoria': self.item.categoria,
         }
-    
-    def requer_reposicao(self):
+
+    def requer_reposicao(self) -> bool:
         """
-        Verifica se o item requer reposição imediata.
-        
-        Returns:
-            bool: True se requer reposição (crítico ou baixo), False caso contrário
+        Verdadeiro se o item estiver crítico ou baixo.
         """
         return self.verifica_estoque_critico() or self.verifica_estoque_baixo()
-    
-    def calcular_quantidade_reposicao(self):
+
+    def get_nivel_urgencia(self) -> int:
         """
-        Calcula a quantidade sugerida para reposição até atingir o estoque máximo.
-        
-        Returns:
-            int: Quantidade sugerida para reposição (0 se não necessário)
-        """
-        if not self.requer_reposicao():
-            return 0
-        return max(0, self.estoque_maximo - self.quantidade_atual)
-    
-    def get_nivel_urgencia(self):
-        """
-        Retorna o nível de urgência para ação no estoque.
-        
-        Returns:
-            int: 0 (OK), 1 (ALTO), 2 (BAIXO), 3 (CRÍTICO)
+        Nível numérico de urgência (para ordenação).
+        3 = crítico, 2 = baixo, 1 = alto, 0 = ok.
         """
         if self.verifica_estoque_critico():
             return 3
-        elif self.verifica_estoque_baixo():
+        if self.verifica_estoque_baixo():
             return 2
-        elif self.verifica_estoque_alto():
+        if self.verifica_estoque_alto():
             return 1
         return 0
 
+    def calcular_quantidade_reposicao(self) -> int:
+        """
+        Sugestão de quantidade de reposição para atingir o estoque máximo.
+        """
+        if self.quantidade_atual >= self.estoque_maximo:
+            return 0
+        return max(self.estoque_maximo - self.quantidade_atual, 0)
+
+
 class Fornecedor(models.Model):
-    nome = models.CharField(max_length=100) # Nome/Razão Social
+    nome = models.CharField(max_length=100)
     cnpj = models.CharField("CNPJ", max_length=18, blank=True, null=True)
     contato = models.CharField("Pessoa de Contato", max_length=100, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(max_length=100, blank=True, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.nome
+
 
 class Item(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     descricao = models.CharField(max_length=150)
+    categoria = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Categoria ou tipo de material (ex.: Limpeza, Escritório, Equipamento).",
+    )
     unidade_medida = models.CharField(max_length=20)
     valor_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    fornecedor = models.ForeignKey(Fornecedor, on_delete=models.SET_NULL, null=True, blank=True)
+    fornecedor = models.ForeignKey(
+        Fornecedor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     estoque_minimo = models.IntegerField(default=0)
     estoque_maximo = models.IntegerField(default=0)
     quantidade_atual = models.IntegerField(default=0)
 
-    # NOVO: Calcula o valor total deste item em estoque
+    class Meta:
+        ordering = ['descricao']
+        indexes = [
+            models.Index(fields=['codigo']),
+            models.Index(fields=['descricao']),
+            models.Index(fields=['categoria']),
+        ]
+
     @property
-    def valor_total_estoque(self):
-        # O cálculo deve ser feito com o custo (valor_unitario)
-        return self.quantidade_atual * self.valor_unitario
-    
-    @property
-    def estoque_manager(self):
+    def valor_total_estoque(self) -> Decimal:
         """
-        Retorna uma instância do EstoqueManager para este item.
-        
+        Valor total do estoque deste item (quantidade atual x valor unitário).
+        """
+        return (self.quantidade_atual or 0) * (self.valor_unitario or Decimal('0.00'))
+
+    @property
+    def estoque_manager(self) -> EstoqueManager:
+        """
+        Acesso ao gerenciador de estoque do item.
         Uso:
-            item = Item.objects.get(pk=1)
             status = item.estoque_manager.get_status_estoque()
-            if item.estoque_manager.requer_reposicao():
-                print("Necessário repor estoque!")
-        
-        Returns:
-            EstoqueManager: Instância do gerenciador de estoque
         """
         return EstoqueManager(self)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.codigo} - {self.descricao}"
+
 
 class Movimentacao(models.Model):
     TIPO_CHOICES = [
@@ -214,6 +201,7 @@ class Movimentacao(models.Model):
         ('RETIRADA', 'Retirada Temporária'),
         ('DEVOLUCAO', 'Devolução'),
     ]
+
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     quantidade = models.IntegerField()
@@ -221,16 +209,78 @@ class Movimentacao(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     data_devolucao_prevista = models.DateField(null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        # Salva movimentação e atualiza estoque do item
-        super().save(*args, **kwargs)
-        if self.tipo == 'ENTRADA' or self.tipo == 'DEVOLUÇÃO':
-            self.item.quantidade_atual += self.quantidade
-        elif self.tipo in ('SAIDA', 'RETIRADA'):
-            self.item.quantidade_atual -= self.quantidade
-            if self.item.quantidade_atual < 0:
-                self.item.quantidade_atual = 0
-        self.item.save()
+    class Meta:
+        ordering = ['-data']
+        indexes = [
+            models.Index(fields=['item', 'data']),
+            models.Index(fields=['tipo', 'data']),
+        ]
 
-    def __str__(self):
+    def _aplicar_efeito_no_estoque(self, fator: int) -> None:
+        """
+        Aplica ou reverte o efeito desta movimentação no estoque do item.
+        fator = +1 para aplicar, -1 para reverter.
+        """
+        if self.tipo in ('ENTRADA', 'DEVOLUCAO'):
+            self.item.quantidade_atual += fator * self.quantidade
+        elif self.tipo in ('SAIDA', 'RETIRADA'):
+            self.item.quantidade_atual -= fator * self.quantidade
+
+        if self.item.quantidade_atual < 0:
+            self.item.quantidade_atual = 0
+
+        self.item.save(update_fields=['quantidade_atual'])
+
+    def save(self, *args, **kwargs):
+        """
+        Garante que o estoque do item seja atualizado corretamente tanto
+        para novas movimentações quanto para edições.
+        """
+        if self.pk:
+            # Reverte efeito anterior antes de salvar nova versão
+            antiga = Movimentacao.objects.get(pk=self.pk)
+            antiga._aplicar_efeito_no_estoque(fator=-1)
+
+        super().save(*args, **kwargs)
+        self._aplicar_efeito_no_estoque(fator=1)
+
+    def __str__(self) -> str:
         return f"{self.tipo} - {self.item.descricao} ({self.quantidade})"
+
+
+class Solicitacao(models.Model):
+    """
+    Representa um pedido de material feito por um usuário,
+    permitindo o acompanhamento do status da solicitação.
+    """
+    TIPO_CHOICES = [
+        ('CONSUMO', 'Consumo'),
+        ('TEMPORARIA', 'Retirada Temporária'),
+    ]
+
+    STATUS_CHOICES = [
+        ('PENDENTE', 'Pendente'),
+        ('APROVADA', 'Aprovada'),
+        ('ATENDIDA', 'Atendida'),
+        ('CANCELADA', 'Cancelada'),
+    ]
+
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantidade = models.IntegerField()
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
+    solicitante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitacoes')
+    data_solicitacao = models.DateTimeField(auto_now_add=True)
+    data_atendimento = models.DateTimeField(null=True, blank=True)
+    data_devolucao_prevista = models.DateField(null=True, blank=True)
+    observacao = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-data_solicitacao']
+        indexes = [
+            models.Index(fields=['item', 'status']),
+            models.Index(fields=['solicitante', 'status']),
+        ]
+
+    def __str__(self) -> str:
+        return f"Solicitação #{self.id} - {self.item.descricao} ({self.quantidade}) - {self.status}"
