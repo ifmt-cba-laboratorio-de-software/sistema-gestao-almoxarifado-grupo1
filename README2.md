@@ -197,10 +197,6 @@ almoxarifado-sistema/
 
 ---
 
-# ** Documentação **
-
-A documentação adicional do projeto (arquitetura, rotas, modelo de dados) pode ser encontrada na pasta `docs/` do repositório.
-
 
 ---
 
