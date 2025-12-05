@@ -17,7 +17,6 @@
 ### 1.1 Servidor Django em execução
 
 ``` bash
-./anotacoes/executar_projeto.sh
 python manage.py runserver
 ```
 
