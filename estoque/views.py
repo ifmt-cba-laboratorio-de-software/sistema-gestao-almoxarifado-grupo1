@@ -139,6 +139,9 @@ def index(request):
     items = paginator.get_page(page)
     return render(request, 'estoque/item_list.html', {'items': items})
 
+#CRUD PRODUTO
+
+#Criação do Produto
 @login_required
 @permission_required('estoque.add_item', raise_exception=True)
 def item_create(request):
@@ -152,6 +155,7 @@ def item_create(request):
         form = ItemForm()
     return render(request, 'estoque/item_form.html', {'form': form})
 
+#Alteração do Produto
 @login_required
 @permission_required('estoque.change_item', raise_exception=True)
 def item_edit(request, pk):
@@ -166,6 +170,7 @@ def item_edit(request, pk):
         form = ItemForm(instance=item)
     return render(request, 'estoque/item_form.html', {'form': form, 'item': item})
 
+#Exclusão do Produto
 @login_required
 @permission_required('estoque.delete_item', raise_exception=True)
 def item_delete(request, pk):
